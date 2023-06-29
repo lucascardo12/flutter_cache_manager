@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:clock/clock.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart';
 import 'mime_converter.dart';
 
 ///Flutter Cache Manager
@@ -20,19 +21,18 @@ abstract class FileService {
 /// [HttpFileService] is the most common file service and the default for
 /// [WebHelper]. One can easily adapt it to use dio or any other http client.
 class HttpFileService extends FileService {
-  final http.Client _httpClient;
-
-  HttpFileService({http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
-
   @override
   Future<FileServiceResponse> get(String url,
       {Map<String, String>? headers}) async {
+    final ioc = HttpClient();
+    ioc.badCertificateCallback =
+        (X509Certificate cert, String host, int port) => true;
+    final ioClient = IOClient(ioc);
     final req = http.Request('GET', Uri.parse(url));
     if (headers != null) {
       req.headers.addAll(headers);
     }
-    final httpResponse = await _httpClient.send(req);
+    final httpResponse = await ioClient.send(req);
 
     return HttpGetResponse(httpResponse);
   }
